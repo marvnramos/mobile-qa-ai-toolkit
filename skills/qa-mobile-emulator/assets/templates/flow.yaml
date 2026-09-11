@@ -1,0 +1,36 @@
+# Maestro flow template — copy per test case into
+#   <evidence-dir>/maestro/TC-<id>.yaml
+# Run with:
+#   maestro test <evidence-dir>/maestro/TC-<id>.yaml \
+#     --env APP_ID=<bundle-id> --env EVIDENCE=<absolute-evidence-dir>
+appId: ${APP_ID}
+name: TC-000 — short statement of the behavior under test
+tags:
+  - smoke
+---
+# 1. Known starting state
+- launchApp:
+    clearState: true
+    clearKeychain: false
+
+# 2. Verification point — assert, then evidence it
+- extendedWaitUntil:
+    visible:
+      id: "REPLACE-entry-screen"
+    timeout: 20000
+- takeScreenshot: ${EVIDENCE}/screenshots/TC-000-01-entry
+
+# 3. Action
+- tapOn:
+    id: "REPLACE-primary-cta"
+
+# 4. Next verification point
+- extendedWaitUntil:
+    visible:
+      id: "REPLACE-result-screen"
+    timeout: 20000
+- takeScreenshot: ${EVIDENCE}/screenshots/TC-000-02-result
+
+# Selector order: id → id on a stable parent + index/childOf → a11y label → visible text.
+# Waits: extendedWaitUntil, never a fixed sleep.
+# One case per file; the file name carries the case id.

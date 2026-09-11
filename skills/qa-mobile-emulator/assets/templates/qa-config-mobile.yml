@@ -1,0 +1,46 @@
+# Mobile emulator prober — merge into .qa/config.yml
+#
+# Register the personality so the orchestrator can dispatch it. `probers` is the
+# read-only list; never add a code-mutating agent here.
+probers:
+  custom:
+    - qa-mobile-emulator
+
+# Device and app under test. Every value is discovered from here rather than guessed
+# by the agent — see rules/pre-brief-contract.md.
+mobile:
+  platform: ios # ios | android
+  ios:
+    device: "REPLACE-simulator-udid-or-name"
+    app_id: "com.example.app.dev" # the DEV CLIENT bundle id, if that is what is installed
+    scheme: "myapp"
+  android:
+    avd: "REPLACE-avd-name"
+    package: "com.example.app.dev"
+    scheme: "myapp"
+
+  # JS source: a live Metro instance, or `release-build` when testing an installed binary.
+  js_source: metro
+  metro_url: "http://localhost:8081"
+  # Android emulators reach the host at 10.0.2.2, or use: adb reverse tcp:8081 tcp:8081
+  metro_url_android: "http://10.0.2.2:8081"
+
+  # Seeded accounts the flows log in with. Never put real credentials in a committed file;
+  # point at the gitignored QA env file instead.
+  credentials_env_file: ".env.qa"
+
+  maestro:
+    min_version: "1.39"
+    default_timeout_ms: 20000
+
+# Backend readiness gate. Read the path from here — do not hardcode /health, which 404s
+# on many stacks and makes `curl -f` fail for the wrong reason.
+api:
+  base_url: "http://localhost:8080"
+  health_path: "/readyz"
+
+severity_map:
+  BLOCKER: 1
+  HIGH: 2
+  MEDIUM: 3
+  LOW: 4
