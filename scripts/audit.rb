@@ -108,6 +108,29 @@ Dir.glob(ROOT.join("agents/*.md").to_s).sort.each do |path|
   errors << "#{rel(path)}: agent `name` must match filename" unless fm["name"].to_s == folder_name
 end
 
+# ── Mirrors ───────────────────────────────────────────────────
+# The plugin loads agents/ and commands/ from the repo root; a skills-CLI install
+# ships only skills/, so the same files are mirrored into the skill's assets.
+# They must stay byte-identical — this gate is what makes the duplication safe.
+MIRRORS = {
+  "agents/qa-mobile-emulator.md" => "skills/qa-mobile-emulator/assets/agents/qa-mobile-emulator.md",
+  "commands/qa-mobile.md" => "skills/qa-mobile-emulator/assets/commands/qa-mobile.md"
+}.freeze
+
+MIRRORS.each do |canonical, copy|
+  a = ROOT.join(canonical)
+  b = ROOT.join(copy)
+  next errors << "#{copy}: mirror of #{canonical} is missing" unless File.exist?(b)
+  next errors << "#{canonical}: missing" unless File.exist?(a)
+
+  errors << "#{copy}: drifted from #{canonical} — copy it over" unless File.read(a) == File.read(b)
+end
+
+installer = ROOT.join("skills/qa-mobile-emulator/assets/install.sh")
+errors << "skills/qa-mobile-emulator/assets/install.sh: missing" unless File.exist?(installer)
+errors << "scripts/install.sh: must delegate to the skill's installer" unless File.exist?(ROOT.join("scripts/install.sh")) &&
+  File.read(ROOT.join("scripts/install.sh")).include?("skills/qa-mobile-emulator/assets/install.sh")
+
 # ── Manifests ─────────────────────────────────────────────────
 catalog = JSON.parse(File.read(ROOT.join("marketplace.json"))) rescue nil
 if catalog.nil?

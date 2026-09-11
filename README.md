@@ -20,8 +20,10 @@ skills/qa-mobile-emulator/
   rules/                              8 enforced rules (preflight, freshness, flows, evidence, findings, safety)
   references/                         Maestro, xcrun simctl, adb, Expo dev-client cheatsheets
   assets/templates/                   Maestro flow template + .qa/config.yml mobile block
-scripts/install.sh                    wire the toolkit into a target repo
-scripts/audit.rb                      structural gate (CI runs it)
+  assets/install.sh                   wire the toolkit into a target repo (bundled with the skill)
+  assets/agents|commands/             mirrors of the two files above, for skills-only installs
+scripts/install.sh                    wrapper around the bundled installer
+scripts/audit.rb                      structural gate (CI runs it), incl. mirror-drift check
 ```
 
 ## Install
@@ -39,16 +41,25 @@ scripts/audit.rb                      structural gate (CI runs it)
 npx skills add marvnramos/mobile-qa-ai-toolkit -s qa-mobile-emulator
 ```
 
-**Then wire it into the project under test:**
+The plugin path brings the agent, the skill, and the `/qa-mobile` command together. The
+skills-CLI path ships the **skill only** — the agent and command come from the installer
+below, which is bundled inside the skill for exactly that reason.
+
+**Then wire it into the project under test** (either path):
 
 ```bash
+# from a clone of this repo
 bash scripts/install.sh /path/to/your/repo
+
+# or from the installed skill, with no clone
+bash .claude/skills/qa-mobile-emulator/assets/install.sh .
 ```
 
-That creates `.claude/agents/qa-mobile-emulator.md` (if the skill was installed without
-the plugin), a `.qa/config.yml` with a `mobile` block to fill in, a `.qa/test-plan.md`
-stub with a Mobile Flows section, a Maestro flow template, and reports the local
-Maestro / xcrun / adb situation. Nothing existing is overwritten.
+That creates `.claude/agents/qa-mobile-emulator.md`, `.claude/commands/qa-mobile.md`, a
+`.qa/config.yml` with a `mobile` block to fill in, a `.qa/test-plan.md` stub with a Mobile
+Flows section, and a Maestro flow template — then reports the local Maestro / xcrun / adb
+situation. Nothing existing is overwritten, and plugin users simply see the agent and
+command steps skipped.
 
 ## Use
 
@@ -93,9 +104,10 @@ A run produces, in the **main checkout**:
 ruby scripts/audit.rb     # structural gate: skills, rules, agents, manifest sync
 ```
 
-CI runs the audit on every push and pull request. When bumping a skill's
-`metadata.version`, bump the matching `marketplace.json` entry in the same commit — the
-audit fails on drift.
+CI runs the audit on every push and pull request. Two kinds of drift fail it: a skill's
+`metadata.version` out of sync with its `marketplace.json` entry, and `agents/` or
+`commands/` out of sync with their mirrors under `skills/qa-mobile-emulator/assets/`
+(edit the root copy, then copy it across).
 
 ### Adding another prober
 
