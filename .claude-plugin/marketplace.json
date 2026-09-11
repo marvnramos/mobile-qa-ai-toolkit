@@ -2,7 +2,7 @@
   "name": "mobile-qa-ai-toolkit",
   "metadata": {
     "description": "Independent AI toolkit for on-device mobile QA — agents, skills, and rules for driving iOS Simulator and Android emulator flows with Maestro.",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "owner": {
     "name": "Marvin Ramos"
@@ -11,8 +11,8 @@
     {
       "name": "mobile-qa",
       "source": "./",
-      "version": "0.1.0",
-      "description": "On-device mobile QA toolkit — the qa-mobile-emulator prober (agent + skill + rules), a /qa-mobile command, and a project installer.",
+      "version": "0.2.0",
+      "description": "On-device mobile QA toolkit for native iOS/Android, React Native, Expo, and Flutter — the qa-mobile-emulator prober (agent + skill + rules), a /qa-mobile command, and a project installer.",
       "keywords": [
         "qa",
         "mobile",
@@ -20,6 +20,8 @@
         "ios",
         "android",
         "emulator",
+        "native",
+        "flutter",
         "expo",
         "react-native"
       ],

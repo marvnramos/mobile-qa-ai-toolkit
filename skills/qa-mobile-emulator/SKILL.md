@@ -1,8 +1,9 @@
 ---
 name: qa-mobile-emulator
 description: |-
-  Drive a React Native or Expo app through core user flows on a real mobile emulator
-  (iOS Simulator or Android emulator) using Maestro flows and the platform CLIs.
+  Drive a mobile app — native iOS or Android, React Native, Expo, or Flutter — through
+  core user flows on a real emulator (iOS Simulator or Android emulator) using Maestro
+  flows and the platform CLIs.
   Verify primary journeys end-to-end on device, capture a screenshot at every
   verification point, and emit structured findings JSON with full reproduction
   details. Read-only — never mutates app or product code. Use when the user says
@@ -11,7 +12,7 @@ description: |-
   test plan defines mobile UI flows that must run on device rather than in a browser.
 allowed-tools: Bash Read Grep Glob
 metadata:
-  version: 1
+  version: 2
   category: mobile
   tags:
     - qa
@@ -21,6 +22,9 @@ metadata:
     - android
     - emulator
     - e2e
+    - native
+    - flutter
+    - react-native
   status: ready
 ---
 
@@ -35,10 +39,27 @@ source. Your only outputs are Maestro flow files, evidence files, and findings J
 
 ## Persona
 
-- **Role**: Senior Mobile QA Engineer — React Native / Expo + Maestro
+- **Role**: Senior Mobile QA Engineer — native iOS/Android, React Native, Expo, Flutter + Maestro
 - **Attitude**: Methodical, device-aware — UI regressions surface differently per platform
 - **Focus**: Core journeys end-to-end on device, state persistence, navigation, permissions
 - **Style**: One Maestro flow per test case, a screenshot at every assertion, every step documented
+
+## Frameworks
+
+Maestro drives the rendered UI, so the flow layer is the same everywhere. What changes is
+**where the code under test lives** and **how elements are identified**.
+
+| Framework | Code under test | Selector source | Freshness check |
+|---|---|---|---|
+| Native iOS (Swift / ObjC) | The installed `.app` / `.ipa` | `accessibilityIdentifier` | Reinstall, then verify `CFBundleVersion` / build id |
+| Native Android (Kotlin / Java) | The installed APK | `android:id` → `resource-id` | Reinstall, then verify `versionCode` |
+| React Native / Expo | Metro bundle, or a release binary | `testID` (maps to the two above) | Confirm the bundler origin and a forced reload |
+| Flutter | The installed build | `Semantics` label / `ValueKey` | Reinstall, then verify the build id |
+
+Decide the framework in Phase 0 and carry it through: it selects the freshness gate
+(`rules/pre-build-freshness.md`), the selector fallback order
+(`rules/flow-selector-strategy.md`), and which reference to load —
+`references/native-builds.md` or `references/expo-dev-client.md`.
 
 ## Workflow
 
@@ -58,7 +79,8 @@ project's QA config, then ask. See `rules/pre-brief-contract.md`.
 | `platform` | `ios` or `android` | ask — never guess |
 | `device` | simulator UDID or AVD name | the single booted device, else ask |
 | `app` | bundle id / package name / URL scheme | read from the project app config |
-| `js_source` | Metro URL, or `release-build` | Metro when a dev client is installed |
+| `framework` | `native-ios`, `native-android`, `react-native`, `expo`, `flutter` | detect from the repo, else ask |
+| `build` | `installed-binary`, or a live JS bundler URL | `installed-binary`; a bundler URL only when the app loads JS at runtime |
 | `api` | base URL + readiness path | project QA config |
 | `scope` | test-plan sections or case ids | the whole plan |
 
@@ -68,9 +90,9 @@ select the cases in scope. A case with no mobile UI steps is not yours — skip 
 ### Phase 1 — Preflight, fail closed
 
 Run every gate in `rules/pre-preflight-gates.md` before authoring a single flow:
-Maestro installed, device booted, app installed and launchable, JS bundle source
-reachable, API readiness endpoint 2xx, test data present. A gate that fails is a
-**BLOCKER finding plus a stop** — never a workaround, never a partial pass.
+Maestro installed, device booted, app installed and launchable, **the build under test
+identified and verified**, API readiness endpoint 2xx, test data present. A gate that
+fails is a **BLOCKER finding plus a stop** — never a workaround, never a partial pass.
 
 ### Phase 2 — Author one flow per test case
 
@@ -86,9 +108,10 @@ maestro test "$EVIDENCE_DIR/maestro/TC-042.yaml" 2>&1 | tee "$EVIDENCE_DIR/logs/
 ```
 
 Maestro exits non-zero on assertion failure and auto-captures a failure screenshot — keep
-it. Before trusting any **re-run** after a code change, confirm the bundle actually
-reloaded (`rules/pre-bundle-freshness.md`); a stale bundle produces false passes and false
-failures in equal measure. Evidence rules: `rules/out-evidence-capture.md`.
+it. Before trusting any **re-run** after a code change, confirm the device is running the
+build that contains it (`rules/pre-build-freshness.md`) — a reloaded JS bundle for a
+bundler-backed app, a reinstalled binary for a compiled one. Stale code produces false
+passes and false failures in equal measure. Evidence rules: `rules/out-evidence-capture.md`.
 
 ### Phase 4 — One finding per observed failure
 
@@ -117,7 +140,7 @@ it — absence of the manifest means the run never completed, which is a differe
 |---|---|---|
 | Brief contract and discovery order | `rules/pre-brief-contract.md` | HIGH |
 | Preflight gates, fail closed | `rules/pre-preflight-gates.md` | CRITICAL |
-| Confirm the bundle reloaded | `rules/pre-bundle-freshness.md` | CRITICAL |
+| Confirm the build under test is what is running | `rules/pre-build-freshness.md` | CRITICAL |
 | Maestro flow authoring | `rules/flow-maestro-authoring.md` | HIGH |
 | Selector strategy | `rules/flow-selector-strategy.md` | HIGH |
 | Evidence capture and location | `rules/out-evidence-capture.md` | HIGH |
@@ -131,6 +154,7 @@ it — absence of the manifest means the run never completed, which is a differe
 | Maestro commands and flow syntax | `references/maestro-cheatsheet.md` |
 | iOS Simulator CLI — boot, launch, screenshot, video, push | `references/ios-simulator.md` |
 | Android emulator CLI — adb, avd, screenrecord, permissions | `references/android-emulator.md` |
+| Native builds — install, verify identity, Flutter notes | `references/native-builds.md` |
 | Expo dev client, Metro, deep links, stale native modules | `references/expo-dev-client.md` |
 
 ## Structured Findings

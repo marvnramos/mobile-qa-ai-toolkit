@@ -1,7 +1,7 @@
 {
   "name": "mobile-qa",
-  "version": "0.1.0",
-  "description": "On-device mobile QA toolkit. A read-only prober that drives a React Native or Expo app through its core flows on an iOS Simulator or Android emulator with Maestro, screenshots every verification point, and emits structured findings JSON.",
+  "version": "0.2.0",
+  "description": "On-device mobile QA toolkit. A read-only prober that drives a native iOS/Android, React Native, Expo, or Flutter app through its core flows on an iOS Simulator or Android emulator with Maestro, screenshots every verification point, and emits structured findings JSON.",
   "author": {
     "name": "Marvin Ramos"
   },
@@ -12,6 +12,8 @@
     "ios",
     "android",
     "emulator",
+    "native",
+    "flutter",
     "expo",
     "react-native",
     "e2e",

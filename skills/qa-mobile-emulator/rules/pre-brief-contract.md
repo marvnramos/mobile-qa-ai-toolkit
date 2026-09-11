@@ -10,10 +10,11 @@ tags:
 
 ## Brief Contract
 
-A run is defined by nine inputs: `run_id`, `findings_dir`, `evidence_dir`, `platform`,
-`device`, `app`, `js_source`, `api`, `scope`. When an input is absent from the brief,
-resolve it in this order: **project QA config → project app config → ask the user.**
-Guessing a bundle id or a device silently tests the wrong thing.
+A run is defined by ten inputs: `run_id`, `findings_dir`, `evidence_dir`, `platform`,
+`framework`, `device`, `app`, `build`, `api`, `scope`. When an input is absent from the
+brief, resolve it in this order: **project QA config → the project's own build config →
+ask the user.** Guessing a bundle id, a framework, or a device silently tests the wrong
+thing.
 
 **Incorrect (guessing the app identity):**
 
@@ -34,13 +35,19 @@ EVIDENCE_DIR="$REPO_ROOT/.qa/reports/$RUN_ID"
 FINDINGS_DIR="$REPO_ROOT/.qa/findings/$RUN_ID"
 mkdir -p "$EVIDENCE_DIR"/{maestro,screenshots,recordings,logs} "$FINDINGS_DIR"
 
-# app id from the project's own config, not from memory
-APP_ID=$(grep -A2 '"ios"' app.json | grep bundleIdentifier | sed -E 's/.*: *"(.*)".*/\1/')
+# app id from the project's own config, not from memory — per framework
+case "$FRAMEWORK" in
+  expo|react-native) APP_ID=$(plutil -extract CFBundleIdentifier raw ios/*/Info.plist 2>/dev/null) ;;
+  native-ios|flutter) APP_ID=$(xcodebuild -showBuildSettings -scheme "$SCHEME" \
+                        | awk -F' = ' '/PRODUCT_BUNDLE_IDENTIFIER/{print $2; exit}') ;;
+  native-android)    APP_ID=$(awk -F'"' '/applicationId/{print $2; exit}' app/build.gradle*) ;;
+esac
 DEVICE=$(xcrun simctl list devices booted -j | python3 -c 'import json,sys;d=json.load(sys.stdin)["devices"];print(next(x["udid"] for v in d.values() for x in v))')
-echo "run=$RUN_ID app=$APP_ID device=$DEVICE" | tee "$EVIDENCE_DIR/logs/run-context.log"
+echo "run=$RUN_ID framework=$FRAMEWORK app=$APP_ID device=$DEVICE" \
+  | tee "$EVIDENCE_DIR/logs/run-context.log"
 ```
 
-- Every artifact is traceable to a known app id, device, and run id.
+- Every artifact is traceable to a known framework, app id, device, and run id.
 - The run context is itself evidence — a reviewer can tell what was tested.
 
 **Why it matters:**

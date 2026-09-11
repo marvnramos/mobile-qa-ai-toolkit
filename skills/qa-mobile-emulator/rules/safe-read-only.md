@@ -17,9 +17,11 @@ sources, fixtures, snapshots, app config, and native projects. Tooling is limite
 **Incorrect (making the app testable mid-run):**
 
 ```bash
-# assertVisible keeps failing, so "just add the testID"
-sed -i '' 's/<Pressable /<Pressable testID="practice-start-button" /' \
-  apps/mobile/components/practice-start.tsx
+# assertVisible keeps failing, so "just add the identifier" — same sin in every stack:
+# .accessibilityIdentifier("practice-start") in Swift, android:id in a layout,
+# testID on an RN component, Semantics(identifier:) in Flutter.
+sed -i '' 's/Button("Start")/Button("Start").accessibilityIdentifier("practice-start")/' \
+  Sources/Practice/PracticeStartView.swift
 git stash pop && maestro test flows/TC-042.yaml   # now green
 ```
 
@@ -37,8 +39,8 @@ git stash pop && maestro test flows/TC-042.yaml   # now green
 ```
 
 ```text
-Run note: practice-start has no testID; TC-042 selects via its parent. Filed as a
-LOW finding ("missing test id blocks stable selection"), not fixed here.
+Run note: the Start control exposes no accessibility identifier; TC-042 selects via its
+parent. Filed as a LOW finding ("missing test id blocks stable selection"), not fixed here.
 ```
 
 - The product is tested exactly as it exists.

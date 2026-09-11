@@ -13,14 +13,23 @@ tags:
 
 Resolution order for every `tapOn` / `assertVisible`:
 
-1. `id:` — the React Native `testID` (surfaces as the accessibility identifier on iOS and
-   the resource id on Android).
+1. `id:` — the element's stable identifier.
 2. `id:` on a stable parent plus `childOf` / `index` for repeated rows.
 3. Accessibility label, when the product guarantees it.
 4. Visible text — only for copy that is asserted **because** it is the thing under test.
 
-When no stable id exists, report the gap in the run notes. Do not add a `testID` to product
-source: this personality is read-only.
+What sets that `id` depends on the stack — Maestro resolves all of them the same way:
+
+| Framework | Set in source as | Surfaces to Maestro as |
+|---|---|---|
+| Native iOS | `accessibilityIdentifier` | iOS accessibility identifier |
+| Native Android | `android:id` / `Modifier.testTag` | `resource-id` |
+| React Native / Expo | `testID` | Both of the above |
+| Flutter | `Semantics(identifier:)` / `ValueKey` | Semantics identifier |
+
+`maestro hierarchy` dumps what the current screen actually exposes — use it to find the
+real ids rather than guessing from source. When no stable id exists, report the gap in the
+run notes. Do not add one to product source: this personality is read-only.
 
 **Incorrect (text selectors as the default):**
 

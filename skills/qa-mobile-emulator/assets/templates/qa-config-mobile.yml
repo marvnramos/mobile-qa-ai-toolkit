@@ -10,20 +10,31 @@ probers:
 # by the agent — see rules/pre-brief-contract.md.
 mobile:
   platform: ios # ios | android
+  # What the app is built with. Selects the freshness gate, the selector fallback order,
+  # and which reference the agent loads.
+  framework: native-ios # native-ios | native-android | react-native | expo | flutter
+
   ios:
     device: "REPLACE-simulator-udid-or-name"
-    app_id: "com.example.app.dev" # the DEV CLIENT bundle id, if that is what is installed
+    app_id: "com.example.app" # the DEV CLIENT bundle id when that is what is installed
     scheme: "myapp"
+    # Compiled builds: where the artifact is, and the identity a fresh install must report.
+    app_path: "REPLACE-path-to/Build/Products/Debug-iphonesimulator/App.app"
+    expected_build: "REPLACE-CFBundleVersion" # read back with PlistBuddy after install
   android:
     avd: "REPLACE-avd-name"
-    package: "com.example.app.dev"
+    package: "com.example.app"
     scheme: "myapp"
+    apk_path: "app/build/outputs/apk/debug/app-debug.apk"
+    expected_build: "REPLACE-versionCode" # read back with: adb shell dumpsys package
 
-  # JS source: a live Metro instance, or `release-build` when testing an installed binary.
-  js_source: metro
-  metro_url: "http://localhost:8081"
+  # Where the code under test lives:
+  #   installed-binary — native iOS/Android, Flutter, RN release builds (the default)
+  #   bundler          — React Native / Expo dev builds served by Metro
+  build: installed-binary
+  bundler_url: "http://localhost:8081"
   # Android emulators reach the host at 10.0.2.2, or use: adb reverse tcp:8081 tcp:8081
-  metro_url_android: "http://10.0.2.2:8081"
+  bundler_url_android: "http://10.0.2.2:8081"
 
   # Seeded accounts the flows log in with. Never put real credentials in a committed file;
   # point at the gitignored QA env file instead.

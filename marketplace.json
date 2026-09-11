@@ -8,7 +8,7 @@
     {
       "name": "qa-mobile-emulator",
       "source": "skills/qa-mobile-emulator",
-      "description": "Drive a React Native or Expo app through core user flows on a real mobile emulator (iOS Simulator or Android emulator) using Maestro flows and the platform CLIs. Read-only prober that screenshots every verification point and emits structured findings JSON. Use when running on-device QA, Maestro flows, or a mobile test plan that cannot run in a browser.",
+      "description": "Drive a mobile app — native iOS or Android, React Native, Expo, or Flutter — through core user flows on a real emulator (iOS Simulator or Android emulator) using Maestro flows and the platform CLIs. Read-only prober that screenshots every verification point and emits structured findings JSON. Use when running on-device QA, Maestro flows, or a mobile test plan that cannot run in a browser.",
       "category": "mobile",
       "tags": [
         "qa",
@@ -17,11 +17,14 @@
         "ios",
         "android",
         "emulator",
-        "e2e"
+        "e2e",
+        "native",
+        "flutter",
+        "react-native"
       ],
       "status": "ready",
       "rules": 8,
-      "version": 1
+      "version": 2
     }
   ]
 }

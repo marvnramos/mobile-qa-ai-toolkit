@@ -1,14 +1,26 @@
 # mobile-qa-ai-toolkit
 
 An independent AI toolkit for **on-device mobile QA**. It ships one read-only prober that
-drives a React Native or Expo app through its real user journeys on an **iOS Simulator or
-Android emulator** with [Maestro](https://maestro.mobile.dev), screenshots every
-verification point, and emits structured findings JSON that an orchestrator, a bug fixer,
-or a human can act on.
+drives a mobile app through its real user journeys on an **iOS Simulator or Android
+emulator** with [Maestro](https://maestro.mobile.dev), screenshots every verification
+point, and emits structured findings JSON that an orchestrator, a bug fixer, or a human
+can act on.
 
-It is stack-aware but **project-agnostic** — the device, bundle id, Metro URL, backend
-readiness path, and test data all come from the target project's `.qa/config.yml`, never
-from anything baked into the skill.
+**Framework-neutral**: native iOS (Swift/ObjC), native Android (Kotlin/Java), React
+Native, Expo, and Flutter. Maestro drives the rendered UI, so the flow layer is identical
+everywhere; what changes is where the code under test lives and how elements are
+identified — both selected by the `framework` key in the project's config.
+
+| Framework | Code under test | Selector source | Freshness check |
+|---|---|---|---|
+| Native iOS | The installed `.app` / `.ipa` | `accessibilityIdentifier` | Reinstall, verify `CFBundleVersion` |
+| Native Android | The installed APK | `android:id` → `resource-id` | Reinstall, verify `versionCode` |
+| React Native / Expo | Metro bundle, or a release binary | `testID` | Bundler origin + forced reload |
+| Flutter | The installed build | `Semantics` / `ValueKey` | Reinstall, verify the build id |
+
+It is stack-aware but **project-agnostic** — framework, device, bundle id, artifact path,
+bundler URL, backend readiness path, and test data all come from the target project's
+`.qa/config.yml`, never from anything baked into the skill.
 
 ## What's inside
 
@@ -18,7 +30,7 @@ commands/qa-mobile.md                 /qa-mobile — mint a run, dispatch the pr
 skills/qa-mobile-emulator/
   SKILL.md                            the contract: persona, 5-phase workflow, 3 modes
   rules/                              8 enforced rules (preflight, freshness, flows, evidence, findings, safety)
-  references/                         Maestro, xcrun simctl, adb, Expo dev-client cheatsheets
+  references/                         Maestro, xcrun simctl, adb, native builds, Expo dev client
   assets/templates/                   Maestro flow template + .qa/config.yml mobile block
   assets/install.sh                   wire the toolkit into a target repo (bundled with the skill)
   assets/agents|commands/             mirrors of the two files above, for skills-only installs
@@ -85,7 +97,7 @@ A run produces, in the **main checkout**:
 |---|---|---|
 | `pre-brief-contract` | HIGH | Guessed bundle ids and devices — evidence with no provenance |
 | `pre-preflight-gates` | CRITICAL | Environment failures reported as product bugs |
-| `pre-bundle-freshness` | CRITICAL | A green re-run against a stale bundle closing a live defect |
+| `pre-build-freshness` | CRITICAL | A green re-run against a stale binary or bundle closing a live defect |
 | `flow-maestro-authoring` | HIGH | Opaque mega-flows, fixed sleeps, assertions with no screenshot |
 | `flow-selector-strategy` | HIGH | Text and coordinate selectors that break on copy or layout |
 | `out-evidence-capture` | HIGH | Evidence written into a worktree that later gets pruned |
@@ -96,6 +108,7 @@ A run produces, in the **main checkout**:
 
 - [Maestro](https://maestro.mobile.dev) 1.39+ (`curl -fsSL https://get.maestro.mobile.dev | bash`)
 - Xcode command line tools for iOS Simulator flows, Android platform tools (`adb`) for emulator flows
+- Nothing else: no test runner, no app-side instrumentation, no source changes
 - A project with a `.qa/` directory — `scripts/install.sh` creates one
 
 ## Development

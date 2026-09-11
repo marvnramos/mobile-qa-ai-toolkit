@@ -16,8 +16,10 @@ Six gates, in order, before the first flow runs:
 2. **Device booted** — `xcrun simctl list devices booted` / `adb devices`; boot the device
    named in the brief if none is up.
 3. **App installed and launchable** on that device, at the resolved bundle id / package.
-4. **JS source reachable** — for a dev client, the Metro endpoint answers; for a release
-   build, the build id is recorded.
+4. **Build under test identified and verified** — for a compiled app (native iOS/Android,
+   Flutter, an RN release build), the installed build identity is read back from the
+   device and matches; for a bundler-backed dev build, the bundler answers and serves the
+   checkout under test. See `pre-build-freshness.md`.
 5. **Backend readiness** — the readiness path from the project QA config returns 2xx.
 6. **Test data present** for the flows in scope.
 
